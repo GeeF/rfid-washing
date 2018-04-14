@@ -3,37 +3,56 @@ var recordstorestore = 0;
 var slot = 0;
 var userdata = [];
 var completed = false;
-var activePage = 2; // 1: logs 2: users 3 :settings
+var activePage = 2; // 0: summary 1: logs 2: users 3 :settings
 var wsUri;
 var updateDeviceTime = undefined;
+
 function showSettings() {
   activePage = 3;
+  document.getElementById('summaryPanel').style.display = 'none';
 	document.getElementById('settingsPanel').style.display = 'block';
 	document.getElementById('usersPanel').style.display = 'none';
 	document.getElementById('logsPanel').style.display = 'none';
 	document.getElementById('navSettings').classList.add('active');
 	document.getElementById('navUsers').classList.remove('active');
 	document.getElementById('navLogs').classList.remove('active');
+	document.getElementById('navSummary').classList.remove('active');
 }
 
 function showUsers() {
   activePage = 2;
+  document.getElementById('summaryPanel').style.display = 'none';
 	document.getElementById('usersPanel').style.display = 'block';
 	document.getElementById('settingsPanel').style.display = 'none';
 	document.getElementById('logsPanel').style.display = 'none';
 	document.getElementById('navSettings').classList.remove('active');
 	document.getElementById('navUsers').classList.add('active');
 	document.getElementById('navLogs').classList.remove('active');
+	document.getElementById('navSummary').classList.remove('active');
 }
 
 function showLogs() {
   activePage = 1;
+  document.getElementById('summaryPanel').style.display = 'none';
 	document.getElementById('logsPanel').style.display = 'block';
 	document.getElementById('usersPanel').style.display = 'none';
 	document.getElementById('settingsPanel').style.display = 'none';
 	document.getElementById('navSettings').classList.remove('active');
 	document.getElementById('navUsers').classList.remove('active');
 	document.getElementById('navLogs').classList.add('active');
+	document.getElementById('navSummary').classList.remove('active');
+}
+
+function showSummary() {
+  activePage = 0;
+  document.getElementById('summaryPanel').style.display = 'block';
+	document.getElementById('logsPanel').style.display = 'none';
+	document.getElementById('usersPanel').style.display = 'none';
+	document.getElementById('settingsPanel').style.display = 'none';
+	document.getElementById('navSettings').classList.remove('active');
+	document.getElementById('navUsers').classList.remove('active');
+	document.getElementById('navLogs').classList.remove('active');
+	document.getElementById('navSummary').classList.add('active');
 }
 
 function mouseoverPass(name) {
@@ -51,6 +70,7 @@ function socketOpenListener(evt) {
 	document.getElementById("settingsFieldset2").disabled = false;
 	document.getElementById("usersFieldset").disabled = false;
 	document.getElementById("logsFieldset").disabled = false;
+	document.getElementById("summaryFieldset").disabled = false;
 }
 
 function socketMessageListener(evt) {
@@ -120,11 +140,19 @@ function socketMessageListener(evt) {
 	  document.getElementById('navLogs').disabled = false;
 		if (obj.result == true) {
 		  logdata = obj.list;
-  	  initLogsTable();
+			initLogsTable();
       $(".footable-show").click();
 		}
 	  websock.send("{\"command\":\"gettime\"}");
 	  setInterval(browserTime, 1000);
+	  // initialize summary as well
+		document.getElementById("summary-loading-img").style.display = "none";
+		document.getElementById("summaryFieldset").disabled = false;
+	  document.getElementById('navSummary').disabled = false;
+		if (obj.result == true) {
+			initSummaryTable();
+      $(".footable-show").click();
+		}
 	} else if (obj.command === "status") {
 		listStats(obj);
 	} else if (obj.command === "result") {
@@ -164,6 +192,7 @@ function socketCloseListener(evt) {
 	document.getElementById("settingsFieldset2").disabled = true;
 	document.getElementById("usersFieldset").disabled = true;
 	document.getElementById("logsFieldset").disabled = true;
+	document.getElementById("summaryFieldset").disabled = true;
 	websock = new WebSocket(wsUri);
 	websock.addEventListener('open', socketOpenListener);
 	websock.addEventListener('message', socketMessageListener);
@@ -176,6 +205,7 @@ function socketErrorListener(evt) {
 	document.getElementById("settingsFieldset2").disabled = true;
 	document.getElementById("usersFieldset").disabled = true;
 	document.getElementById("logsFieldset").disabled = true;
+	document.getElementById("summaryFieldset").disabled = true;
 	console.log('socket error');
 	console.log(evt);
 }
@@ -196,6 +226,7 @@ function start() {
 		document.getElementById("settingsFieldset2").disabled = true;
 		document.getElementById("usersFieldset").disabled = true;
 		document.getElementById("logsFieldset").disabled = true;
+		document.getElementById("summaryFieldset").disabled = true;
 	};
 }
 

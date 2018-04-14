@@ -43,6 +43,8 @@
 #include <TimeLib.h>                  // Library for converting epochtime to a date
 #include <WiFiUdp.h>                  // Library for manipulating UDP packets which is used by NTP Client to get Timestamps
 
+#define LOGSIZE 7000  // with ~500 KB Spiffs, about 8200 log entries possible, depending on name len
+
 // Variables for whole scope
 unsigned long previousMillis = 0;
 unsigned long previousLoopMillis = 0;
@@ -374,7 +376,7 @@ void LogLatest(String uid, String username) {
       Serial.println("Impossible to read JSON file");
     } else {
       logFile.close();
-      if ( list.size() >= 15 ) {
+      if ( list.size() >= LOGSIZE ) {
         list.remove(0);
       }
       File logFile = SPIFFS.open("/auth/latestlog.json", "w");
@@ -469,6 +471,21 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
         } else {
           // no log
           ws.textAll("{\"type\":\"latestlog\",\"result\": false}");
+        }
+      }
+      else if (strcmp(command, "latestsummary")  == 0) {
+        File logFile = SPIFFS.open("/auth/latestlog.json", "r");
+        if (logFile) {
+          size_t len = logFile.size();
+          AsyncWebSocketMessageBuffer * buffer = ws.makeBuffer(len); //  creates a buffer (len + 1) for you.
+          if (buffer) {
+            logFile.readBytes((char *)buffer->get(), len + 1);
+            ws.textAll(buffer);
+          }
+          logFile.close();
+        } else {
+          // no log
+          ws.textAll("{\"type\":\"latestsummary\",\"result\": false}");
         }
       }
       else if (strcmp(command, "scan")  == 0) {
